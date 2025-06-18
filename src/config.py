@@ -1,6 +1,5 @@
 """Configuration settings for the HTTP Translator agent."""
 
-import os
 from pathlib import Path
 
 
@@ -15,7 +14,6 @@ class Config:
     # Embedding settings
     EMBEDDING_MODEL = "voyage-3.5"
     TOP_K_ENDPOINTS = 20
-
 
     # Cache settings
     CACHE_DIR = Path("cache")

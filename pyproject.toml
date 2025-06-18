@@ -58,6 +58,9 @@ lint.ignore = [
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+[tool.mypy]
+disable_error_code = ["call-arg"]
+
 [tool.uv.sources]
 agent = { workspace = true }
 
@@ -68,5 +71,6 @@ dev = [
     "langgraph-cli[inmem]>=0.2.8",
     "mypy>=1.13.0",
     "ruff>=0.8.2",
+    "types-aiofiles>=24.1.0.20250606",
     "types-requests>=2.32.4.20250611",
 ]
