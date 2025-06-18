@@ -61,6 +61,10 @@ convention = "google"
 [tool.mypy]
 disable_error_code = ["unused-ignore"]
 
+[[tool.mypy.overrides]]
+module = "voyageai"
+ignore_missing_imports = true
+
 [tool.uv.sources]
 agent = { workspace = true }
 

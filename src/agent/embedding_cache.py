@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import httpx
-from voyageai import AsyncClient  # type: ignore[attr-defined]
+import voyageai
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ async def add_url_to_cache(api_spec_url: str, cache_file: str, model: str) -> No
 
     # Embed documents
     logger.info(f"🔮 Creating embeddings with {model}...")
-    vo = AsyncClient()
+    vo = voyageai.AsyncClient()  # type: ignore[attr-defined]
     doc_texts = [doc["text"] for doc in endpoint_documents]
     doc_result = await vo.embed(doc_texts, model=model, input_type="document")
 

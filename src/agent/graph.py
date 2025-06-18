@@ -7,28 +7,23 @@ from __future__ import annotations
 
 import json
 import logging
-import sys
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, Dict, List, TypedDict
 
 import aiofiles.os
 import httpx
 import numpy as np
+import voyageai
 from langchain_anthropic import ChatAnthropic
-from voyageai import AsyncClient  # type: ignore[attr-defined]
-
-from agent.embedding_cache import (  # type: ignore[import-not-found]
-    get_cached_api_spec,
-    get_cached_embeddings,
-)
-
-sys.path.append(str(Path(__file__).parent.parent))
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph
 
-from config import Config  # type: ignore[import-not-found]
+from src.agent.embedding_cache import (
+    get_cached_api_spec,
+    get_cached_embeddings,
+)
+from src.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +133,7 @@ async def rag_retrieve_endpoints(
                     )
 
         # Initialize Voyage async client
-        vo = AsyncClient()
+        vo = voyageai.AsyncClient()  # type: ignore[attr-defined]
 
         # Embed all endpoint documents
         doc_texts = [doc["text"] for doc in endpoint_documents]
@@ -148,7 +143,7 @@ async def rag_retrieve_endpoints(
         doc_embds = doc_result.embeddings
 
     # Now embed user query (always need fresh query embedding)
-    vo = AsyncClient()
+    vo = voyageai.AsyncClient()  # type: ignore[attr-defined]
     query_result = await vo.embed(
         [state.user_query], model=Config.EMBEDDING_MODEL, input_type="query"
     )

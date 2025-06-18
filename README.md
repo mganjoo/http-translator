@@ -45,10 +45,10 @@ VOYAGE_API_KEY=your_voyage_key_here
 
 ```bash
 # Start the LangGraph development server
-langgraph dev
+uv run langgraph dev
 
 # Pre-cache API embeddings for faster performance (recommended for large APIs)
-python create_cache.py "https://dac-static.atlassian.com/cloud/jira/platform/swagger-v3.v3.json?_v=1.7940.0-0.1323.0"
+uv run python create_cache.py "https://dac-static.atlassian.com/cloud/jira/platform/swagger-v3.v3.json?_v=1.7940.0-0.1323.0"
 
 # In another terminal, test with a query
 curl -X POST "http://localhost:2024/runs/stream" \
@@ -106,4 +106,4 @@ See [CLAUDE.md](CLAUDE.md) for detailed development instructions and agent archi
 
 ## License
 
-[Add your license here]
+MIT License
