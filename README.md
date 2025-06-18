@@ -73,8 +73,8 @@ All configuration is centralized in `src/config.py`:
 
 ## Example Queries
 
-- "Get all issues assigned to me"
-- "Create a new issue in project ABC"
+- "Find all issues assigned to me"
+- "Update 4 statuses 1, 43, and 57 to all have the name \`Foo\`"
 - "Search for issues with status 'In Progress'"
 - "Get project details for project KEY-123"
 
