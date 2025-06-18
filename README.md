@@ -17,7 +17,7 @@ This agent takes a natural language query and an OpenAPI spec URL, then:
 
 - Python 3.11+
 - uv package manager
-- API keys for Anthropic and Voyage AI (set in `.env`)
+- API keys for [Anthropic](https://docs.anthropic.com/en/api/overview) and [Voyage](https://docs.voyageai.com/docs/api-key-and-installation) AI (set in `.env`)
 
 ### Installation
 
