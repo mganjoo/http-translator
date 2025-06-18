@@ -1,8 +1,8 @@
 """Utility for caching API spec embeddings."""
 
 import asyncio
+import json
 import logging
-import pickle
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -32,7 +32,7 @@ async def extract_endpoint_documents(
                 description = details.get("description", "")
 
                 # Create document text for embedding
-                doc_text = f"Path: {path}\nMethod: {method.upper()}\nSummary: {summary}\nDescription: {description}"
+                doc_text = f"{summary}\n{description}"
 
                 endpoint_documents.append(
                     {
@@ -54,8 +54,8 @@ async def load_cache_dict(cache_file: str) -> Dict[str, Any]:
         cache_path = Path(cache_file)
         if cache_path.exists():
             try:
-                with open(cache_file, "rb") as f:
-                    return pickle.load(f)  # type: ignore[no-any-return]
+                with open(cache_file, "r", encoding="utf-8") as f:
+                    return json.load(f)  # type: ignore[no-any-return]
             except Exception as e:
                 logger.warning(f"⚠️ Error loading cache, creating new one: {e}")
         return {}
@@ -69,8 +69,8 @@ async def save_cache_dict(cache_dict: Dict[str, Any], cache_file: str) -> None:
     def _save_cache() -> None:
         cache_path = Path(cache_file)
         cache_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(cache_file, "wb") as f:
-            pickle.dump(cache_dict, f)
+        with open(cache_file, "w", encoding="utf-8") as f:
+            json.dump(cache_dict, f, indent=2, ensure_ascii=False)
 
     await asyncio.to_thread(_save_cache)
 

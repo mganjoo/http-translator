@@ -17,4 +17,4 @@ class Config:
 
     # Cache settings
     CACHE_DIR = Path("cache")
-    DEFAULT_CACHE_FILE = str(CACHE_DIR / "api_cache.pkl")
+    DEFAULT_CACHE_FILE = str(CACHE_DIR / "api_cache.json")
