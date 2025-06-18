@@ -42,8 +42,36 @@ class State:
     api_spec_url: str = ""
     api_spec: Dict[str, Any] | None = None
     rag_results: List[Dict[str, Any]] | None = None
+    all_rag_scores: List[Dict[str, Any]] | None = None
     relevant_endpoints: List[Dict[str, Any]] | None = None
     http_request: Dict[str, Any] | None = None
+
+
+def extract_endpoint_documents(api_spec: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Extract endpoint documents from API spec for embedding."""
+    paths = api_spec.get("paths", {})
+    endpoint_documents = []
+
+    for path, methods in paths.items():
+        for method, details in methods.items():
+            if method.upper() in ["GET", "POST", "PUT", "DELETE", "PATCH"]:
+                summary = details.get("summary", "")
+                description = details.get("description", "")
+
+                # Create document text for embedding
+                doc_text = f"Path: {path}\nMethod: {method.upper()}\nSummary: {summary}\nDescription: {description}"
+
+                endpoint_documents.append(
+                    {
+                        "path": path,
+                        "method": method.upper(),
+                        "summary": summary,
+                        "description": description,
+                        "text": doc_text,
+                    }
+                )
+
+    return endpoint_documents
 
 
 async def extract_api_spec(state: State, config: RunnableConfig) -> Dict[str, Any]:
@@ -110,27 +138,7 @@ async def rag_retrieve_endpoints(
         logger.info("🔮 Creating new embeddings...")
 
         # Extract endpoint documents from API spec
-        paths = state.api_spec.get("paths", {})
-        endpoint_documents = []
-
-        for path, methods in paths.items():
-            for method, details in methods.items():
-                if method.upper() in ["GET", "POST", "PUT", "DELETE", "PATCH"]:
-                    summary = details.get("summary", "")
-                    description = details.get("description", "")
-
-                    # Create document text for embedding
-                    doc_text = f"Path: {path}\nMethod: {method.upper()}\nSummary: {summary}\nDescription: {description}"
-
-                    endpoint_documents.append(
-                        {
-                            "path": path,
-                            "method": method.upper(),
-                            "summary": summary,
-                            "description": description,
-                            "text": doc_text,
-                        }
-                    )
+        endpoint_documents = extract_endpoint_documents(state.api_spec)
 
         # Initialize Voyage async client
         vo = voyageai.AsyncClient()  # type: ignore[attr-defined]
@@ -152,8 +160,23 @@ async def rag_retrieve_endpoints(
     # Compute similarities using dot product (cosine similarity since embeddings are normalized)
     similarities = np.dot(doc_embds, query_embd)
 
-    # Get top K most similar endpoints
-    top_indices = np.argsort(similarities)[::-1][: Config.TOP_K_ENDPOINTS]
+    # Get all endpoints sorted by similarity score (descending)
+    all_indices = np.argsort(similarities)[::-1]
+
+    # Create all_rag_scores with just endpoint name and score
+    all_rag_scores = []
+    for idx in all_indices:
+        endpoint = endpoint_documents[idx]
+        endpoint_name = f"{endpoint['method']} {endpoint['path']}"
+        all_rag_scores.append(
+            {
+                "endpoint": endpoint_name,
+                "score": float(similarities[idx]),
+            }
+        )
+
+    # Get top K most similar endpoints for rag_results
+    top_indices = all_indices[: Config.TOP_K_ENDPOINTS]
 
     rag_results = []
     for idx in top_indices:
@@ -168,7 +191,7 @@ async def rag_retrieve_endpoints(
             }
         )
 
-    return {"rag_results": rag_results}
+    return {"rag_results": rag_results, "all_rag_scores": all_rag_scores}
 
 
 async def find_relevant_endpoints(
@@ -189,7 +212,7 @@ async def find_relevant_endpoints(
 
     prompt = f"""Given this user query: "{state.user_query}"
 
-And these pre-filtered API endpoints from RAG (top most relevant):
+And thist list of pre-filtered API endpoints from RAG (top most relevant):
 {json.dumps(rag_endpoints, indent=2)}
 
 Please identify the MINIMAL set of API endpoints needed to fulfill the user's request. Prioritize:
@@ -197,9 +220,15 @@ Please identify the MINIMAL set of API endpoints needed to fulfill the user's re
 2. Batch operations over multiple single-item calls
 3. The most efficient and direct approach
 
+Important:
+- Consider the descriptions and summaries of the endpoints to determine relevance.
+- ONLY consider the pre-filtered endpoints provided above.
+- Do NOT reference your own knowledge of APIs.
+
 Return as few endpoints as possible - ideally just one if it can handle the request completely.
 
 Return your response as a JSON list of objects with keys: path, method, summary, description.
+Do NOT add your own summary or description, simply copy the relevant fields from the provided endpoints.
 Only return the JSON, no other text."""
 
     response = await llm.ainvoke([HumanMessage(content=prompt)])
@@ -268,7 +297,7 @@ async def construct_http_request(
     referenced_schemas = set()
     for endpoint_spec in full_endpoint_specs:
         _extract_schema_refs(endpoint_spec["spec"], referenced_schemas)
-    
+
     # Recursively extract schemas referenced by other schemas (transitive dependencies)
     if "schemas" in components:
         to_check = list(referenced_schemas)
@@ -282,12 +311,12 @@ async def construct_http_request(
                     if ref not in referenced_schemas:
                         referenced_schemas.add(ref)
                         to_check.append(ref)
-    
+
     limited_components = {}
     if "schemas" in components and referenced_schemas:
         limited_components["schemas"] = {
-            k: components["schemas"][k] 
-            for k in referenced_schemas 
+            k: components["schemas"][k]
+            for k in referenced_schemas
             if k in components["schemas"]
         }
 
