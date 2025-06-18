@@ -13,7 +13,7 @@ class Config:
 
     # Embedding settings
     EMBEDDING_MODEL = "voyage-3.5"
-    TOP_K_ENDPOINTS = 20
+    TOP_K_ENDPOINTS = 6
 
     # Cache settings
     CACHE_DIR = Path("cache")
