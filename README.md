@@ -1,6 +1,6 @@
 # HTTP Translator Agent
 
-A LangGraph agent that translates natural language queries into properly formed HTTP requests using OpenAPI specifications.
+A LangGraph agent that translates natural language queries into properly formed HTTP requests using OpenAPI specifications. Built with help from [Claude Code](https://www.anthropic.com/claude-code).
 
 ## Overview
 

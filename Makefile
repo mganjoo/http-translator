@@ -1,25 +1,7 @@
-.PHONY: all format lint test tests test_watch integration_tests docker_tests help extended_tests
+.PHONY: all format lint help
 
 # Default target executed when no arguments are given to make.
 all: help
-
-# Define a variable for the test file path.
-TEST_FILE ?= tests/unit_tests/
-
-test:
-	python -m pytest $(TEST_FILE)
-
-integration_tests:
-	python -m pytest tests/integration_tests 
-
-test_watch:
-	python -m ptw --snapshot-update --now . -- -vv tests/unit_tests
-
-test_profile:
-	python -m pytest -vv tests/unit_tests/ --profile-svg
-
-extended_tests:
-	python -m pytest --only-extended $(TEST_FILE)
 
 
 ######################
@@ -60,8 +42,4 @@ help:
 	@echo '----'
 	@echo 'format                       - run code formatters'
 	@echo 'lint                         - run linters'
-	@echo 'test                         - run unit tests'
-	@echo 'tests                        - run unit tests'
-	@echo 'test TEST_FILE=<test_file>   - run all tests in file'
-	@echo 'test_watch                   - run unit tests in watch mode'
 

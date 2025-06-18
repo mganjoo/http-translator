@@ -55,8 +55,6 @@ lint.ignore = [
     "D417",
     "E501",
 ]
-[tool.ruff.lint.per-file-ignores]
-"tests/*" = ["D", "UP"]
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
@@ -69,7 +67,6 @@ dev = [
     "anyio>=4.7.0",
     "langgraph-cli[inmem]>=0.2.8",
     "mypy>=1.13.0",
-    "pytest>=8.3.5",
     "ruff>=0.8.2",
     "types-requests>=2.32.4.20250611",
 ]
