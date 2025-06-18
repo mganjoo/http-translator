@@ -220,6 +220,22 @@ Only return the JSON, no other text."""
     return {"relevant_endpoints": relevant_endpoints}
 
 
+def _extract_schema_refs(obj: Any, refs: set[str]) -> None:
+    """Recursively extract schema references from a JSON object."""
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if key == "$ref" and isinstance(value, str):
+                # Extract schema name from references like "#/components/schemas/SchemaName"
+                if value.startswith("#/components/schemas/"):
+                    schema_name = value.split("/")[-1]
+                    refs.add(schema_name)
+            else:
+                _extract_schema_refs(value, refs)
+    elif isinstance(obj, list):
+        for item in obj:
+            _extract_schema_refs(item, refs)
+
+
 async def construct_http_request(
     state: State, config: RunnableConfig
 ) -> Dict[str, Any]:
@@ -248,12 +264,31 @@ async def construct_http_request(
         max_tokens=Config.CONSTRUCT_REQUEST_MAX_TOKENS,  # type: ignore[call-arg]
     )
 
-    # Limit components to reduce token usage
-    limited_components = {}
+    # Extract schemas referenced by the endpoints
+    referenced_schemas = set()
+    for endpoint_spec in full_endpoint_specs:
+        _extract_schema_refs(endpoint_spec["spec"], referenced_schemas)
+    
+    # Recursively extract schemas referenced by other schemas (transitive dependencies)
     if "schemas" in components:
-        schema_keys = list(components["schemas"].keys())[:10]  # Only first 10 schemas
+        to_check = list(referenced_schemas)
+        while to_check:
+            schema_name = to_check.pop()
+            if schema_name in components["schemas"]:
+                schema_obj = components["schemas"][schema_name]
+                new_refs = set()
+                _extract_schema_refs(schema_obj, new_refs)
+                for ref in new_refs:
+                    if ref not in referenced_schemas:
+                        referenced_schemas.add(ref)
+                        to_check.append(ref)
+    
+    limited_components = {}
+    if "schemas" in components and referenced_schemas:
         limited_components["schemas"] = {
-            k: components["schemas"][k] for k in schema_keys
+            k: components["schemas"][k] 
+            for k in referenced_schemas 
+            if k in components["schemas"]
         }
 
     prompt = f"""Given this user query: "{state.user_query}"
