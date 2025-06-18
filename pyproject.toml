@@ -59,7 +59,7 @@ lint.ignore = [
 convention = "google"
 
 [tool.mypy]
-disable_error_code = ["call-arg"]
+disable_error_code = ["unused-ignore"]
 
 [tool.uv.sources]
 agent = { workspace = true }

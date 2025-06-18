@@ -188,8 +188,8 @@ async def find_relevant_endpoints(
 
     # Use Claude to find relevant endpoints from RAG results
     llm = ChatAnthropic(
-        model_name=Config.MODEL_NAME,
-        max_tokens_to_sample=Config.FIND_ENDPOINTS_MAX_TOKENS,
+        model=Config.MODEL_NAME,  # type: ignore[call-arg]
+        max_tokens=Config.FIND_ENDPOINTS_MAX_TOKENS,  # type: ignore[call-arg]
     )
 
     prompt = f"""Given this user query: "{state.user_query}"
@@ -249,8 +249,8 @@ async def construct_http_request(
 
     # Use Claude to construct the HTTP request
     llm = ChatAnthropic(
-        model_name=Config.MODEL_NAME,
-        max_tokens_to_sample=Config.CONSTRUCT_REQUEST_MAX_TOKENS,
+        model=Config.MODEL_NAME,  # type: ignore[call-arg]
+        max_tokens=Config.CONSTRUCT_REQUEST_MAX_TOKENS,  # type: ignore[call-arg]
     )
 
     # Limit components to reduce token usage
