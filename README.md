@@ -62,14 +62,6 @@ curl -X POST "http://localhost:2024/runs/stream" \
   }' | grep '^data: ' | tail -n 1 | sed -e 's/^data: //' | jq .http_request
 ```
 
-#### Production Mode
-
-```bash
-# Build and deploy
-langgraph build
-langgraph deploy
-```
-
 ## Configuration
 
 All configuration is centralized in `src/config.py`:
